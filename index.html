@@ -1438,8 +1438,14 @@ async function buildCard(fr) {
   x.fillStyle = g; x.fillRect(0, 0, W, H);
   const font = (spec, stretch) => { x.font = spec; if ('fontStretch' in x) x.fontStretch = stretch || 'normal'; };
   x.fillStyle = '#161B1E'; x.textBaseline = 'alphabetic';
-  font('900 104px Archivo, "Arial Narrow", Arial, sans-serif', 'extra-condensed'); x.fillText('MAKE THE FACE', 66, 128);
-  x.textAlign = 'right'; x.fillText(`${sc}`, W - 66, 128);
+  // Some browsers can't draw condensed type on a canvas, so measure and shrink the title to fit beside the score.
+  const display = (px) => font(`900 ${px}px Archivo, "Arial Narrow", Arial, sans-serif`, 'extra-condensed');
+  display(104);
+  const scoreW = x.measureText(`${sc}`).width, room = W - 66 * 2 - scoreW - 48;
+  let titlePx = 104;
+  for (let i = 0; i < 4; i++) { display(titlePx); const tw = x.measureText('MAKE THE FACE').width; if (tw <= room) break; titlePx = Math.floor(titlePx * room / tw); }
+  x.fillText('MAKE THE FACE', 66, 128);
+  display(104); x.textAlign = 'right'; x.fillText(`${sc}`, W - 66, 128);
   font('700 30px Archivo, "Arial Narrow", Arial, sans-serif', 'condensed'); x.fillStyle = '#55626A'; x.fillText(rankFor(sc).toUpperCase(), W - 66, 166);
   x.textAlign = 'left'; font('500 18px "IBM Plex Mono", ui-monospace, monospace');
   const [timg, yimg] = await Promise.all([loadImg($('targetImg').src), loadImg(fr.photo || fr.thumb)]);
